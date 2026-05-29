@@ -1,0 +1,237 @@
+---
+// src/layouts/ArticleLayout.astro
+import BaseLayout from './BaseLayout.astro';
+import TableOfContents from '../components/article/TableOfContents.astro';
+import AuthorCard from '../components/article/AuthorCard.astro';
+import RelatedPosts from '../components/article/RelatedPosts.astro';
+import ShareButtons from '../components/article/ShareButtons.astro';
+import NewsletterCTA from '../components/cta/NewsletterCTA.astro';
+import ProductCTA from '../components/cta/ProductCTA.astro';
+import type { ArticleFrontmatter } from '../content/config';
+import { generateArticleSchema } from '../lib/schema';
+
+interface Props {
+  frontmatter: ArticleFrontmatter;
+  headings: { depth: number; slug: string; text: string }[];
+  slug: string;
+}
+
+const { frontmatter, headings, slug } = Astro.props;
+const {
+  title,
+  description,
+  publishedAt,
+  updatedAt,
+  author,
+  cover,
+  ogImage,
+  category,
+  tags,
+  seo,
+  cta,
+  difficulty,
+  readingTime,
+  tools,
+} = frontmatter;
+
+const site = 'https://colmeiapublic.com.br';
+const articleUrl = `${site}/${category}/${slug}`;
+const jsonLd = generateArticleSchema({
+  title: seo?.title ?? title,
+  description,
+  url: articleUrl,
+  imageUrl: ogImage ?? (cover?.src ? `${site}${cover.src}` : `${site}/og-default.jpg`),
+  publishedAt: publishedAt.toISOString(),
+  updatedAt: updatedAt?.toISOString(),
+  authorName: author.name,
+  schemaType: seo?.schemaType ?? 'Article',
+});
+
+const showTopCTA = cta?.position === 'top' || cta?.position === 'all';
+const showMidCTA = cta?.position === 'mid' || cta?.position === 'all';
+const showBottomCTA = !cta || cta.position === 'bottom' || cta.position === 'all';
+const ctaType = cta?.type ?? 'newsletter';
+
+const categoryLabels: Record<string, string> = {
+  design: 'Design',
+  dev: 'Desenvolvimento',
+  marketing: 'Marketing',
+  ia: 'Inteligência Artificial',
+};
+---
+
+<BaseLayout
+  title={seo?.title ?? title}
+  description={description}
+  image={ogImage ?? cover?.src}
+  type="article"
+  publishedAt={publishedAt.toISOString()}
+  updatedAt={updatedAt?.toISOString()}
+  noindex={seo?.noindex}
+>
+  <!-- JSON-LD Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head-extra" />
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+    <div class="lg:grid lg:grid-cols-[1fr_280px] lg:gap-12 xl:gap-16">
+
+      <!-- ── Coluna principal ── -->
+      <article class="min-w-0">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="Breadcrumb" class="mb-6 flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <a href="/" class="hover:text-yellow-500 transition-colors">Home</a>
+          <span aria-hidden="true">/</span>
+          <a href={`/${category}`} class="hover:text-yellow-500 transition-colors capitalize">
+            {categoryLabels[category]}
+          </a>
+          <span aria-hidden="true">/</span>
+          <span class="text-zinc-900 dark:text-zinc-100 truncate">{title}</span>
+        </nav>
+
+        <!-- Header do artigo -->
+        <header class="mb-8">
+          <div class="flex flex-wrap gap-2 mb-4">
+            <a
+              href={`/${category}`}
+              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400/20 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-400/30 transition-colors"
+            >
+              {categoryLabels[category]}
+            </a>
+            {difficulty && (
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                {difficulty}
+              </span>
+            )}
+          </div>
+
+          <h1 class="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold leading-tight tracking-tight text-zinc-900 dark:text-white mb-4">
+            {title}
+          </h1>
+
+          <p class="text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6">
+            {description}
+          </p>
+
+          <!-- Meta row -->
+          <div class="flex flex-wrap items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 border-y border-zinc-200 dark:border-zinc-800 py-4">
+            <div class="flex items-center gap-2">
+              {author.avatar ? (
+                <img src={author.avatar} alt={author.name} class="w-7 h-7 rounded-full object-cover" />
+              ) : (
+                <div class="w-7 h-7 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold text-black">
+                  {author.name.charAt(0)}
+                </div>
+              )}
+              <span class="font-medium text-zinc-700 dark:text-zinc-300">{author.name}</span>
+            </div>
+
+            <time datetime={publishedAt.toISOString()}>
+              {publishedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            </time>
+
+            {readingTime && (
+              <span>{readingTime} min de leitura</span>
+            )}
+
+            {updatedAt && (
+              <span class="text-xs">
+                Atualizado em{' '}
+                <time datetime={updatedAt.toISOString()}>
+                  {updatedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </time>
+              </span>
+            )}
+          </div>
+
+          <!-- Tags -->
+          {tags.length > 0 && (
+            <div class="flex flex-wrap gap-2 mt-4">
+              {tags.map((tag) => (
+                <a
+                  href={`/tags/${tag}`}
+                  class="text-xs px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                >
+                  #{tag}
+                </a>
+              ))}
+            </div>
+          )}
+        </header>
+
+        <!-- Cover image -->
+        {cover && (
+          <figure class="mb-8 -mx-4 sm:mx-0">
+            <img
+              src={cover.src}
+              alt={cover.alt}
+              class="w-full rounded-none sm:rounded-xl object-cover aspect-video"
+              loading="eager"
+              fetchpriority="high"
+            />
+            {cover.caption && (
+              <figcaption class="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-500">
+                {cover.caption}
+              </figcaption>
+            )}
+          </figure>
+        )}
+
+        <!-- CTA topo (opcional) -->
+        {showTopCTA && ctaType === 'newsletter' && <NewsletterCTA position="inline" />}
+        {showTopCTA && ctaType === 'product' && cta?.productId && (
+          <ProductCTA productId={cta.productId} position="inline" />
+        )}
+
+        <!-- Conteúdo MDX -->
+        <div class="prose prose-zinc dark:prose-invert prose-lg max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-yellow-600 dark:prose-a:text-yellow-400 prose-a:no-underline hover:prose-a:underline prose-code:text-yellow-700 dark:prose-code:text-yellow-300 prose-code:bg-yellow-50 dark:prose-code:bg-yellow-900/20 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-zinc-900 prose-pre:border prose-pre:border-zinc-800">
+          <!-- CTA meio (injetado via slot nomeado dentro do MDX) -->
+          <slot name="mid-cta">
+            {showMidCTA && ctaType === 'newsletter' && <NewsletterCTA position="inline" />}
+          </slot>
+          <slot />
+        </div>
+
+        <!-- Tools mencionados -->
+        {tools.length > 0 && (
+          <div class="mt-10 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3">
+              Ferramentas citadas neste artigo
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {tools.map((tool) => (
+                <span class="text-sm px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium">
+                  {tool}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- CTA fundo -->
+        {showBottomCTA && ctaType === 'newsletter' && <NewsletterCTA position="bottom" />}
+        {showBottomCTA && ctaType === 'product' && cta?.productId && (
+          <ProductCTA productId={cta.productId} position="bottom" />
+        )}
+
+        <!-- Rodapé do artigo -->
+        <footer class="mt-12 pt-8 border-t border-zinc-200 dark:border-zinc-800 space-y-8">
+          <ShareButtons title={title} url={articleUrl} />
+          <AuthorCard author={author} />
+          <RelatedPosts category={category} currentSlug={slug} />
+        </footer>
+      </article>
+
+      <!-- ── Sidebar (sticky) ── -->
+      <aside class="hidden lg:block">
+        <div class="sticky top-24 space-y-6">
+          {headings.length > 2 && (
+            <TableOfContents headings={headings} />
+          )}
+          <NewsletterCTA position="sidebar" />
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</BaseLayout>

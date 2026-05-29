@@ -1,0 +1,52 @@
+---
+// src/pages/[categoria]/[slug].astro
+// Rota canônica dos artigos: /design/guia-tipografia, /dev/astro-vs-nextjs etc.
+
+import { getCollection, type CollectionEntry } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import Header from '../../components/global/Header.astro';
+import Footer from '../../components/global/Footer.astro';
+
+type ValidCollection = 'design' | 'dev' | 'marketing' | 'ia';
+const COLLECTIONS: ValidCollection[] = ['design', 'dev', 'marketing', 'ia'];
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const allPosts = (
+    await Promise.all(
+      COLLECTIONS.map(col =>
+        getCollection(col, ({ data }) => !data.draft)
+          .then(posts => posts.map(p => ({ ...p, collection: col })))
+      )
+    )
+  ).flat();
+
+  return allPosts.map(post => ({
+    params: { categoria: post.collection, slug: post.slug },
+    props:  { post },
+  }));
+};
+
+interface Props {
+  post: CollectionEntry<ValidCollection>;
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await post.render();
+
+// Calcula tempo de leitura se não informado no frontmatter
+// (200 palavras/min — média de leitura técnica)
+const estimatedReadingTime = post.data.readingTime
+  ?? Math.ceil((post.body?.split(/\s+/).length ?? 0) / 200);
+
+const frontmatter = {
+  ...post.data,
+  readingTime: estimatedReadingTime,
+};
+---
+
+<ArticleLayout frontmatter={frontmatter} headings={headings} slug={post.slug}>
+  <Header slot="header" />
+  <Content />
+  <Footer slot="footer" />
+</ArticleLayout>

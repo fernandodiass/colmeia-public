@@ -1,0 +1,109 @@
+---
+// src/components/article/TableOfContents.astro
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+
+// Filtra apenas h2 e h3
+const filtered = headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+
+{filtered.length > 0 && (
+  <nav aria-label="Índice do artigo" class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 overflow-hidden">
+    <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
+      <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+        Neste artigo
+      </p>
+    </div>
+
+    <ol class="px-2 py-2 space-y-0.5" id="toc-list">
+      {filtered.map((h) => (
+        <li>
+          <a
+            href={`#${h.slug}`}
+            data-toc-link={h.slug}
+            class:list={[
+              'toc-link flex items-start gap-2 px-3 py-2 rounded-lg text-sm transition-colors leading-snug',
+              h.depth === 3 ? 'ml-3 text-[13px]' : '',
+              'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-white dark:hover:bg-zinc-800',
+            ]}
+          >
+            {h.depth === 3 && (
+              <span class="mt-1 flex-shrink-0 w-1 h-1 rounded-full bg-current opacity-50" aria-hidden="true"></span>
+            )}
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ol>
+
+    <!-- Indicador de progresso -->
+    <div class="px-4 pb-3 pt-1">
+      <div class="h-1 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+        <div id="read-progress" class="h-full bg-yellow-400 rounded-full transition-all duration-100 ease-out" style="width: 0%"></div>
+      </div>
+    </div>
+  </nav>
+)}
+
+<script>
+  // ── Highlight da seção ativa via IntersectionObserver ──
+  const links = document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]');
+  if (links.length) {
+    const activeClass = ['bg-white', 'dark:bg-zinc-800', 'text-yellow-700', 'dark:text-yellow-400', 'font-medium'];
+    const baseClass   = ['text-zinc-500', 'dark:text-zinc-400'];
+
+    let currentActive: string | null = null;
+
+    function setActive(slug: string) {
+      if (slug === currentActive) return;
+      currentActive = slug;
+      links.forEach(link => {
+        const isActive = link.getAttribute('data-toc-link') === slug;
+        activeClass.forEach(c => link.classList.toggle(c, isActive));
+        baseClass.forEach(c => link.classList.toggle(c, !isActive));
+      });
+    }
+
+    const headingEls = Array.from(
+      document.querySelectorAll<HTMLElement>('h2[id], h3[id]')
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+    );
+
+    headingEls.forEach(el => observer.observe(el));
+  }
+
+  // ── Barra de progresso de leitura ──
+  const bar = document.getElementById('read-progress');
+  if (bar) {
+    const article = document.querySelector('article');
+    if (article) {
+      window.addEventListener('scroll', () => {
+        const { top, height } = article.getBoundingClientRect();
+        const windowH = window.innerHeight;
+        const progress = Math.min(100, Math.max(0,
+          ((windowH - top) / (height + windowH)) * 100
+        ));
+        bar.style.width = `${progress}%`;
+      }, { passive: true });
+    }
+  }
+</script>

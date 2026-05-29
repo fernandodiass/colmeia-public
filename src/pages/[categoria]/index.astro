@@ -1,0 +1,173 @@
+---
+// src/pages/[categoria]/index.astro
+import { getCollection } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/global/Header.astro';
+import Footer from '../../components/global/Footer.astro';
+import NewsletterCTA from '../../components/cta/NewsletterCTA.astro';
+
+type ValidCollection = 'design' | 'dev' | 'marketing' | 'ia';
+
+const META: Record<ValidCollection, { label: string; description: string; emoji: string; accent: string }> = {
+  design: {
+    label: 'Design',
+    description: 'Tipografia, sistemas de cores, UI/UX, ferramentas e princípios de design visual aplicados ao mundo digital.',
+    emoji: '🎨',
+    accent: 'violet',
+  },
+  dev: {
+    label: 'Desenvolvimento',
+    description: 'Astro, Next.js, Cloudflare, performance web, componentes e arquitetura de projetos modernos.',
+    emoji: '⚡',
+    accent: 'blue',
+  },
+  marketing: {
+    label: 'Marketing',
+    description: 'SEO técnico, funis de conteúdo, copywriting, estratégias de crescimento e monetização.',
+    emoji: '📈',
+    accent: 'emerald',
+  },
+  ia: {
+    label: 'Inteligência Artificial',
+    description: 'Prompts, automações, APIs de IA, ferramentas generativas e aplicações práticas para criadores.',
+    emoji: '🤖',
+    accent: 'amber',
+  },
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const collections: ValidCollection[] = ['design', 'dev', 'marketing', 'ia'];
+  return collections.map(c => ({ params: { categoria: c } }));
+};
+
+const { categoria } = Astro.params as { categoria: ValidCollection };
+const meta = META[categoria];
+
+// Posts da coleção, ordenados por data
+// const posts = (await getCollection(categoria, ({ data }) => !data.draft))
+//   .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+
+// Mock para desenvolvimento
+const mockPosts = Array.from({ length: 9 }, (_, i) => ({
+  slug: `artigo-exemplo-${i + 1}`,
+  data: {
+    title: `Artigo de ${meta.label} número ${i + 1}`,
+    description: 'Uma solução técnica e prática para um problema real que você encontra no dia a dia do trabalho criativo.',
+    publishedAt: new Date(Date.now() - i * 86400000 * 3),
+    readingTime: 5 + (i % 8),
+    tags: ['tutorial', 'prático'],
+    featured: i === 0,
+    difficulty: (['iniciante', 'intermediário', 'avançado'] as const)[i % 3],
+  },
+}));
+
+const posts = mockPosts;
+const featured = posts.find(p => p.data.featured);
+const rest = posts.filter(p => !p.data.featured);
+
+const accentClasses: Record<string, string> = {
+  violet:  'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300',
+  blue:    'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+  emerald: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
+  amber:   'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
+};
+const accentClass = accentClasses[meta.accent];
+---
+
+<BaseLayout
+  title={`${meta.label} — Tutoriais e soluções práticas`}
+  description={meta.description}
+>
+  <Header slot="header" />
+
+  <!-- Header da categoria -->
+  <div class="pt-28 pb-12 border-b border-zinc-200 dark:border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-2xl">
+          {meta.emoji}
+        </div>
+        <div>
+          <h1 class="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white">{meta.label}</h1>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{posts.length} artigos publicados</p>
+        </div>
+      </div>
+      <p class="text-base text-zinc-500 dark:text-zinc-400 mt-4 max-w-2xl leading-relaxed">
+        {meta.description}
+      </p>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- Destaque da categoria -->
+    {featured && (
+      <section class="mb-12" aria-label="Artigo em destaque">
+        <a
+          href={`/${categoria}/${featured.slug}`}
+          class="group flex flex-col sm:flex-row gap-6 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all"
+        >
+          <div class="w-full sm:w-64 h-40 sm:h-auto rounded-xl bg-zinc-100 dark:bg-zinc-800 flex-shrink-0 flex items-center justify-center text-5xl">
+            {meta.emoji}
+          </div>
+          <div class="flex flex-col justify-center">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-400/20 text-yellow-700 dark:text-yellow-400">Destaque</span>
+              {featured.data.difficulty && (
+                <span class:list={['text-xs font-semibold px-2 py-0.5 rounded-md', accentClass]}>
+                  {featured.data.difficulty}
+                </span>
+              )}
+              <span class="text-xs text-zinc-400">{featured.data.readingTime} min</span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors mb-2 text-balance">
+              {featured.data.title}
+            </h2>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-2">
+              {featured.data.description}
+            </p>
+          </div>
+        </a>
+      </section>
+    )}
+
+    <!-- Grid de artigos -->
+    <section aria-label={`Artigos de ${meta.label}`}>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {rest.map(post => (
+          <a href={`/${categoria}/${post.slug}`} class="group article-card">
+            <div class="flex items-center gap-2 mb-3">
+              {post.data.difficulty && (
+                <span class:list={['text-xs font-semibold px-2 py-0.5 rounded-md', accentClass]}>
+                  {post.data.difficulty}
+                </span>
+              )}
+              <span class="text-xs text-zinc-400">{post.data.readingTime} min</span>
+            </div>
+            <h3 class="font-semibold text-base leading-snug text-zinc-900 dark:text-zinc-100 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors mb-2 text-balance">
+              {post.data.title}
+            </h3>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-auto leading-relaxed">
+              {post.data.description}
+            </p>
+            <time
+              datetime={post.data.publishedAt.toISOString()}
+              class="block text-xs text-zinc-400 dark:text-zinc-600 mt-4"
+            >
+              {post.data.publishedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </time>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- Newsletter inline -->
+    <div class="mt-16">
+      <NewsletterCTA position="bottom" />
+    </div>
+
+  </div>
+
+  <Footer slot="footer" />
+</BaseLayout>

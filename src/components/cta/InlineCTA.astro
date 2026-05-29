@@ -1,0 +1,44 @@
+---
+// src/components/cta/InlineCTA.astro
+// CTA leve para usar dentro do corpo do artigo (entre parágrafos)
+// Uso no MDX:
+//   <InlineCTA href="/produtos/pack-ui-components" label="Ver o Pack de Componentes →">
+//     Quer os componentes prontos? Temos um pack com 50+ itens.
+//   </InlineCTA>
+
+interface Props {
+  href: string;
+  label?: string;
+  type?: 'yellow' | 'dark' | 'ghost';
+}
+
+const {
+  href,
+  label = 'Saiba mais →',
+  type = 'yellow',
+} = Astro.props;
+
+const styles: Record<string, string> = {
+  yellow: 'bg-yellow-400/10 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 [&_a]:bg-yellow-400 [&_a]:text-black [&_a]:hover:bg-yellow-300',
+  dark:   'bg-zinc-900 border-zinc-700 text-zinc-200 [&_a]:bg-white [&_a]:text-black [&_a]:hover:bg-zinc-100',
+  ghost:  'bg-transparent border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 [&_a]:border [&_a]:border-zinc-300 dark:border-zinc-600 [&_a]:text-zinc-800 dark:text-zinc-200 [&_a]:hover:bg-zinc-100 dark:hover:bg-zinc-800',
+};
+---
+
+<aside
+  class:list={[
+    'not-prose my-7 flex flex-col sm:flex-row sm:items-center gap-4 rounded-xl border px-5 py-4',
+    styles[type],
+  ]}
+  aria-label="Conteúdo relacionado"
+>
+  <p class="flex-1 text-sm leading-relaxed font-medium">
+    <slot />
+  </p>
+  <a
+    href={href}
+    class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-bold transition-colors whitespace-nowrap"
+  >
+    {label}
+  </a>
+</aside>

@@ -1,0 +1,201 @@
+---
+// src/pages/blog/index.astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/global/Header.astro';
+import Footer from '../../components/global/Footer.astro';
+import NewsletterCTA from '../../components/cta/NewsletterCTA.astro';
+// import { getCollection } from 'astro:content';
+
+// ── Ativar com artigos reais ──────────────────────────────────────────────────
+// type ValidCollection = 'design' | 'dev' | 'marketing' | 'ia';
+// const COLS: ValidCollection[] = ['design', 'dev', 'marketing', 'ia'];
+// const allPosts = (
+//   await Promise.all(COLS.map(col =>
+//     getCollection(col, ({ data }) => !data.draft)
+//       .then(posts => posts.map(p => ({ ...p, collection: col })))
+//   ))
+// ).flat().sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+// ─────────────────────────────────────────────────────────────────────────────
+
+type Category = 'design' | 'dev' | 'marketing' | 'ia';
+
+const categoryMeta: Record<Category, { label: string; color: string }> = {
+  design:    { label: 'Design',    color: 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300' },
+  dev:       { label: 'Dev',       color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
+  marketing: { label: 'Marketing', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' },
+  ia:        { label: 'IA',        color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
+};
+
+// Mock para desenvolvimento visual
+const mockPosts: { slug: string; collection: Category; data: { title: string; description: string; publishedAt: Date; readingTime: number; tags: string[]; featured: boolean; difficulty?: 'iniciante' | 'intermediário' | 'avançado' } }[] = [
+  { slug: 'guia-tipografia-2025',      collection: 'design',    data: { title: 'Guia definitivo de tipografia para interfaces em 2025',         description: 'Tudo sobre escala tipográfica, pares de fontes e hierarquia visual aplicada a UIs modernas.',       publishedAt: new Date('2025-05-20'), readingTime: 12, tags: ['tipografia','ui'],       featured: true,  difficulty: 'intermediário' } },
+  { slug: 'astro-vs-nextjs',           collection: 'dev',       data: { title: 'Astro vs Next.js: qual escolher para seu projeto?',             description: 'Comparação técnica com benchmarks reais de performance, DX e casos de uso para cada framework.',    publishedAt: new Date('2025-05-18'), readingTime: 8,  tags: ['astro','nextjs'],       featured: true,  difficulty: 'intermediário' } },
+  { slug: 'funil-de-conteudo-b2b',     collection: 'marketing', data: { title: 'Como construir um funil de conteúdo que converte de verdade',   description: 'Da atração ao fechamento: estrutura prática de funil editorial para negócios B2B e criadores.',    publishedAt: new Date('2025-05-15'), readingTime: 10, tags: ['funil','seo'],          featured: false, difficulty: 'iniciante' } },
+  { slug: 'prompts-midjourney-v6',     collection: 'ia',        data: { title: 'Os melhores prompts para Midjourney V6 por tipo de projeto',   description: '100+ prompts testados e organizados por categoria: branding, UI, editorial, ilustração e mais.',    publishedAt: new Date('2025-05-12'), readingTime: 6,  tags: ['midjourney','prompts'], featured: false, difficulty: 'iniciante' } },
+  { slug: 'dark-mode-css',             collection: 'dev',       data: { title: 'Dark mode perfeito com CSS variables e zero JavaScript',        description: 'Implementação de dark mode com prefers-color-scheme, custom properties e transição suave.',           publishedAt: new Date('2025-05-10'), readingTime: 5,  tags: ['css','dark-mode'],      featured: false, difficulty: 'iniciante' } },
+  { slug: 'color-theory-ui',           collection: 'design',    data: { title: 'Teoria das cores aplicada a interfaces digitais',              description: 'Como usar contraste, temperatura e harmonia cromática para criar UIs que comunicam e convertem.',   publishedAt: new Date('2025-05-08'), readingTime: 9,  tags: ['cores','ui'],           featured: false, difficulty: 'iniciante' } },
+  { slug: 'seo-tecnico-2025',          collection: 'marketing', data: { title: 'Checklist completo de SEO técnico para Jamstack',              description: 'Schema markup, Core Web Vitals, sitemap, robots.txt e canonical tags em sites Astro/Next.js.',       publishedAt: new Date('2025-05-05'), readingTime: 7,  tags: ['seo','jamstack'],       featured: false, difficulty: 'intermediário' } },
+  { slug: 'claude-api-automacao',      collection: 'ia',        data: { title: 'Automações práticas com a API da Claude',                     description: 'Fluxos reais de automação editorial usando a API da Anthropic: resumos, meta tags e traduções.',     publishedAt: new Date('2025-05-03'), readingTime: 8,  tags: ['claude','api'],         featured: false, difficulty: 'intermediário' } },
+  { slug: 'grid-layout-avancado',      collection: 'design',    data: { title: 'CSS Grid avançado: layouts impossíveis que funcionam',         description: 'Subgrid, named lines e masonry com CSS Grid. Exemplos práticos e copy-paste de código.',              publishedAt: new Date('2025-04-30'), readingTime: 11, tags: ['css','grid'],           featured: false, difficulty: 'avançado' } },
+  { slug: 'cloudflare-workers',        collection: 'dev',       data: { title: 'Cloudflare Workers: serverless na borda sem dor de cabeça',   description: 'Deploy, variáveis de ambiente, KV storage e integração com Astro. Do zero ao ar em 30 minutos.',    publishedAt: new Date('2025-04-28'), readingTime: 6,  tags: ['cloudflare','serverless'], featured: false, difficulty: 'intermediário' } },
+  { slug: 'copywriting-headlines',     collection: 'marketing', data: { title: '12 fórmulas de headline que aumentam o CTR em newsletters',   description: 'Estruturas testadas de subject lines e títulos de artigos com dados reais de taxa de abertura.',      publishedAt: new Date('2025-04-25'), readingTime: 7,  tags: ['copywriting','email'],  featured: false, difficulty: 'iniciante' } },
+  { slug: 'stable-diffusion-local',    collection: 'ia',        data: { title: 'Stable Diffusion local: setup completo em 2025',              description: 'ComfyUI, SDXL, LoRAs e ControlNet rodando na sua máquina. Guia com hardware mínimo e recomendado.', publishedAt: new Date('2025-04-22'), readingTime: 14, tags: ['stable-diffusion','ia'], featured: false, difficulty: 'avançado' } },
+];
+
+const allPosts = mockPosts;
+const totalPosts = allPosts.length;
+---
+
+<BaseLayout
+  title="Blog — Design, Dev, Marketing e IA"
+  description="Todos os artigos da Colmeia Public. Tutoriais práticos, guias técnicos e estratégias acionáveis para quem cria na internet."
+>
+  <Header slot="header" />
+
+  <!-- Hero da listagem -->
+  <div class="pt-28 pb-12 border-b border-zinc-100 dark:border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white mb-2">Todos os artigos</h1>
+      <p class="text-zinc-500 dark:text-zinc-400">
+        {totalPosts} publicações em Design, Dev, Marketing e IA
+      </p>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Filtros de categoria (client-side via data attributes) -->
+    <div class="flex flex-wrap gap-2 mb-10" role="group" aria-label="Filtrar por categoria">
+      <button
+        data-filter="all"
+        class="filter-btn active px-4 py-2 rounded-full text-sm font-semibold transition-colors bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+      >
+        Todos ({totalPosts})
+      </button>
+      {(Object.entries(categoryMeta) as [Category, { label: string; color: string }][]).map(([slug, { label }]) => {
+        const count = allPosts.filter(p => p.collection === slug).length;
+        return (
+          <button
+            data-filter={slug}
+            class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition-colors bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+          >
+            {label} ({count})
+          </button>
+        );
+      })}
+    </div>
+
+    <!-- Grid de artigos -->
+    <div id="posts-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {allPosts.map(post => (
+        <article
+          data-category={post.collection}
+          class="post-card group flex flex-col p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all"
+        >
+          <a href={`/${post.collection}/${post.slug}`} class="flex flex-col flex-1" tabindex="-1" aria-hidden="true">
+            <div class="flex items-center gap-2 mb-3">
+              <span class:list={['text-xs font-semibold px-2 py-0.5 rounded-md', categoryMeta[post.collection].color]}>
+                {categoryMeta[post.collection].label}
+              </span>
+              {post.data.difficulty && (
+                <span class="text-xs text-zinc-400 dark:text-zinc-500">{post.data.difficulty}</span>
+              )}
+              <span class="text-xs text-zinc-400 dark:text-zinc-500 ml-auto">{post.data.readingTime} min</span>
+            </div>
+
+            <h2 class="font-bold text-base leading-snug text-zinc-900 dark:text-zinc-100 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors mb-2 text-balance">
+              {post.data.title}
+            </h2>
+
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed mb-auto">
+              {post.data.description}
+            </p>
+
+            <div class="flex flex-wrap gap-1.5 mt-4">
+              {post.data.tags.slice(0, 3).map(tag => (
+                <span class="text-[11px] px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+
+            <time
+              datetime={post.data.publishedAt.toISOString()}
+              class="block text-xs text-zinc-400 dark:text-zinc-600 mt-3"
+            >
+              {post.data.publishedAt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </time>
+          </a>
+          <!-- Link real acessível -->
+          <a
+            href={`/${post.collection}/${post.slug}`}
+            class="sr-only focus:not-sr-only focus:mt-3 focus:inline-flex focus:items-center focus:gap-1 focus:text-sm focus:font-medium focus:text-yellow-600"
+          >
+            Ler {post.data.title}
+          </a>
+        </article>
+      ))}
+    </div>
+
+    <!-- Empty state (mostrado via JS quando sem resultados) -->
+    <div id="empty-state" class="hidden py-20 text-center">
+      <p class="text-4xl mb-4">🔍</p>
+      <p class="font-semibold text-zinc-700 dark:text-zinc-300">Nenhum artigo nessa categoria ainda.</p>
+      <button data-filter="all" class="filter-btn mt-4 text-sm text-yellow-600 dark:text-yellow-400 underline underline-offset-2">
+        Ver todos os artigos
+      </button>
+    </div>
+
+    <!-- Newsletter -->
+    <div class="mt-16">
+      <NewsletterCTA position="bottom" />
+    </div>
+  </div>
+
+  <Footer slot="footer" />
+</BaseLayout>
+
+<script>
+  const buttons  = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const cards    = document.querySelectorAll<HTMLElement>('.post-card');
+  const empty    = document.getElementById('empty-state')!;
+
+  function applyFilter(filter: string) {
+    let visible = 0;
+
+    cards.forEach(card => {
+      const match = filter === 'all' || card.dataset.category === filter;
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    empty.classList.toggle('hidden', visible > 0);
+
+    buttons.forEach(btn => {
+      const isActive = btn.dataset.filter === filter;
+      btn.classList.toggle('bg-zinc-900',  isActive);
+      btn.classList.toggle('dark:bg-white', isActive);
+      btn.classList.toggle('text-white',   isActive);
+      btn.classList.toggle('dark:text-zinc-900', isActive);
+      btn.classList.toggle('bg-zinc-100',  !isActive);
+      btn.classList.toggle('dark:bg-zinc-800', !isActive);
+      btn.classList.toggle('text-zinc-600', !isActive);
+      btn.classList.toggle('dark:text-zinc-400', !isActive);
+    });
+
+    // Persiste na URL sem recarregar
+    const url = new URL(window.location.href);
+    if (filter === 'all') url.searchParams.delete('categoria');
+    else url.searchParams.set('categoria', filter);
+    history.replaceState(null, '', url);
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => applyFilter(btn.dataset.filter!));
+  });
+
+  // Lê filtro da URL ao carregar
+  const params = new URLSearchParams(window.location.search);
+  const initial = params.get('categoria') ?? 'all';
+  applyFilter(initial);
+</script>

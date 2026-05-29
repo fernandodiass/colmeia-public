@@ -1,0 +1,123 @@
+---
+// src/components/cta/NewsletterCTA.astro
+interface Props {
+  position: 'inline' | 'bottom' | 'sidebar';
+  headline?: string;
+  subline?: string;
+}
+
+const {
+  position,
+  headline = 'Fique por dentro das melhores soluções',
+  subline = 'Toda semana: tutoriais de Design, Dev, Marketing e IA direto no seu e-mail.',
+} = Astro.props;
+
+const isSidebar = position === 'sidebar';
+const isBottom  = position === 'bottom';
+---
+
+<aside
+  id="newsletter"
+  data-cta="newsletter"
+  class:list={[
+    'newsletter-cta rounded-xl border transition-colors',
+    isSidebar
+      ? 'p-4 bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800/50'
+      : isBottom
+        ? 'p-6 sm:p-8 bg-zinc-900 dark:bg-zinc-800 border-zinc-700 my-10'
+        : 'p-5 bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 my-8',
+  ]}
+  aria-label="Assinar newsletter"
+>
+  {!isSidebar && (
+    <div class="flex items-center gap-2 mb-3">
+      <div class="w-6 h-6 rounded-md bg-yellow-400 flex items-center justify-center text-[10px] font-black text-black">C</div>
+      <span class:list={[
+        'text-xs font-semibold uppercase tracking-wider',
+        isBottom ? 'text-yellow-400' : 'text-yellow-600 dark:text-yellow-400'
+      ]}>
+        Newsletter Colmeia
+      </span>
+    </div>
+  )}
+
+  <h3 class:list={[
+    'font-bold leading-snug mb-2',
+    isSidebar
+      ? 'text-base text-zinc-800 dark:text-zinc-100'
+      : isBottom
+        ? 'text-xl sm:text-2xl text-white'
+        : 'text-lg text-zinc-900 dark:text-zinc-100'
+  ]}>
+    {isSidebar ? 'Newsletter semanal' : headline}
+  </h3>
+
+  <p class:list={[
+    'text-sm leading-relaxed mb-4',
+    isSidebar
+      ? 'text-zinc-500 dark:text-zinc-400'
+      : isBottom
+        ? 'text-zinc-400'
+        : 'text-zinc-500 dark:text-zinc-400'
+  ]}>
+    {isSidebar ? 'Conteúdo prático toda semana, sem spam.' : subline}
+  </p>
+
+  <form
+    class:list={[
+      'flex gap-2',
+      isSidebar ? 'flex-col' : 'flex-col sm:flex-row'
+    ]}
+    novalidate
+    data-newsletter-form
+  >
+    <input
+      type="email"
+      name="email"
+      placeholder="seu@email.com"
+      required
+      autocomplete="email"
+      class:list={[
+        'flex-1 px-3 py-2.5 rounded-lg text-sm placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition border',
+        isBottom
+          ? 'bg-white/10 border-white/20 text-white placeholder-zinc-500 focus:bg-white/15'
+          : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100'
+      ]}
+    />
+    <button
+      type="submit"
+      class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-yellow-400 text-black hover:bg-yellow-300 transition-colors flex-shrink-0 disabled:opacity-60"
+    >
+      Assinar grátis
+    </button>
+  </form>
+
+  <p class="text-xs mt-2 text-zinc-400 dark:text-zinc-500">
+    Sem spam. Cancele quando quiser.
+  </p>
+
+  <p class="cta-success-msg hidden text-sm font-medium mt-2 text-green-600 dark:text-green-400">
+    ✓ Você está na lista! Bem-vindo(a) à Colmeia.
+  </p>
+</aside>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('[data-newsletter-form]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = (form.elements.namedItem('email') as HTMLInputElement)?.value;
+      if (!email) return;
+
+      const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+      btn.disabled = true;
+      btn.textContent = 'Enviando…';
+
+      // TODO: integrar com Resend / ConvertKit / MailerLite
+      await new Promise(r => setTimeout(r, 800));
+
+      const successMsg = form.closest('[data-cta="newsletter"]')?.querySelector('.cta-success-msg');
+      form.style.display = 'none';
+      successMsg?.classList.remove('hidden');
+    });
+  });
+</script>

@@ -1,0 +1,38 @@
+---
+// src/pages/blog/[slug].astro
+// Rota catch-all: /blog/[slug] redireciona para /[category]/[slug]
+// Este arquivo centraliza a rota genérica para compatibilidade de links externos.
+// A rota principal de cada artigo vive em /[categoria]/[slug].astro
+
+import { getCollection, type CollectionEntry } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const collections = ['design', 'dev', 'marketing', 'ia'] as const;
+
+  const allPosts = (
+    await Promise.all(
+      collections.map(col =>
+        getCollection(col, ({ data }) => !data.draft)
+          .then(posts => posts.map(p => ({ ...p, collection: col })))
+      )
+    )
+  ).flat();
+
+  return allPosts.map(post => ({
+    params: { slug: post.slug },
+    props:  { post, collection: post.collection },
+  }));
+};
+
+interface Props {
+  post: CollectionEntry<'design' | 'dev' | 'marketing' | 'ia'>;
+  collection: string;
+}
+
+const { collection } = Astro.props;
+const { slug } = Astro.params;
+
+// Redireciona para a URL canônica com categoria
+return Astro.redirect(`/${collection}/${slug}`, 301);
+---

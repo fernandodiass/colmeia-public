@@ -1,0 +1,35 @@
+---
+// src/components/article/AuthorCard.astro
+interface Author {
+  name: string;
+  avatar?: string;
+  bio?: string;
+  twitter?: string;
+}
+interface Props { author: Author; }
+const { author } = Astro.props;
+---
+<div class="flex items-start gap-4 p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+  {author.avatar ? (
+    <img src={author.avatar} alt={author.name} class="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+  ) : (
+    <div class="w-14 h-14 rounded-full bg-yellow-400 flex items-center justify-center text-xl font-black text-black flex-shrink-0">
+      {author.name.charAt(0)}
+    </div>
+  )}
+  <div class="min-w-0">
+    <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Autor</p>
+    <p class="font-bold text-zinc-900 dark:text-zinc-100">{author.name}</p>
+    {author.bio && <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">{author.bio}</p>}
+    {author.twitter && (
+      <a
+        href={`https://twitter.com/${author.twitter}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 mt-2 text-xs font-medium text-zinc-500 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+      >
+        @{author.twitter}
+      </a>
+    )}
+  </div>
+</div>

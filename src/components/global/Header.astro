@@ -1,0 +1,198 @@
+---
+// src/components/global/Header.astro
+import ThemeToggle from './ThemeToggle.astro';
+
+const navLinks = [
+  { href: '/design',    label: 'Design' },
+  { href: '/dev',       label: 'Dev' },
+  { href: '/marketing', label: 'Marketing' },
+  { href: '/ia',        label: 'IA' },
+];
+
+const currentPath = Astro.url.pathname;
+
+function isActive(href: string) {
+  return currentPath.startsWith(href);
+}
+---
+
+<header
+  id="site-header"
+  class="fixed top-0 left-0 right-0 z-50 h-16 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md transition-all duration-300"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-6">
+
+    <!-- Logotipo -->
+    <a href="/" class="flex items-center gap-2.5 flex-shrink-0 group" aria-label="Colmeia Public — início">
+      <div class="w-8 h-8 rounded-lg bg-yellow-400 flex items-center justify-center text-black font-black text-sm leading-none select-none group-hover:bg-yellow-300 transition-colors">
+        C
+      </div>
+      <span class="font-bold text-[15px] tracking-tight text-zinc-900 dark:text-white hidden sm:block">
+        Colmeia<span class="text-yellow-500">.</span>
+      </span>
+    </a>
+
+    <!-- Nav desktop -->
+    <nav aria-label="Navegação principal" class="hidden md:flex items-center gap-1">
+      {navLinks.map(({ href, label }) => (
+        <a
+          href={href}
+          class:list={[
+            'px-3.5 py-2 rounded-lg text-sm font-medium transition-colors',
+            isActive(href)
+              ? 'bg-yellow-400/15 text-yellow-700 dark:text-yellow-400'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
+          ]}
+          aria-current={isActive(href) ? 'page' : undefined}
+        >
+          {label}
+        </a>
+      ))}
+    </nav>
+
+    <!-- Ações direita -->
+    <div class="flex items-center gap-2">
+      <!-- Busca -->
+      <button
+        id="search-trigger"
+        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+        aria-label="Buscar artigos"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <span class="hidden sm:inline">Buscar</span>
+        <kbd class="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono bg-zinc-200 dark:bg-zinc-700 text-zinc-500 rounded">⌘K</kbd>
+      </button>
+
+      <ThemeToggle />
+
+      <!-- CTA Newsletter -->
+      <a
+        href="#newsletter"
+        class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-yellow-400 text-black hover:bg-yellow-300 transition-colors"
+      >
+        Newsletter
+      </a>
+
+      <!-- Menu mobile hamburger -->
+      <button
+        id="mobile-menu-toggle"
+        class="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <svg id="icon-menu" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+        <svg id="icon-close" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="hidden">
+          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Menu mobile (drawer) -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 z-40 md:hidden pointer-events-none"
+  aria-hidden="true"
+>
+  <!-- Overlay -->
+  <div id="mobile-overlay" class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-200"></div>
+
+  <!-- Painel -->
+  <nav
+    id="mobile-panel"
+    class="absolute top-16 left-0 right-0 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 translate-y-[-8px] opacity-0 transition-all duration-200 ease-out"
+    aria-label="Menu mobile"
+  >
+    <ul class="px-4 py-4 space-y-1">
+      {navLinks.map(({ href, label }) => (
+        <li>
+          <a
+            href={href}
+            class:list={[
+              'flex items-center px-4 py-3 rounded-xl text-[15px] font-medium transition-colors',
+              isActive(href)
+                ? 'bg-yellow-400/15 text-yellow-700 dark:text-yellow-400'
+                : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+            ]}
+          >
+            {label}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <div class="px-8 pb-6">
+      <a
+        href="#newsletter"
+        class="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold bg-yellow-400 text-black hover:bg-yellow-300 transition-colors"
+      >
+        Assinar newsletter grátis
+      </a>
+    </div>
+  </nav>
+</div>
+
+<!-- Scroll shrink + mobile menu JS -->
+<script>
+  // Header shrink on scroll
+  const header = document.getElementById('site-header');
+  let lastScroll = 0;
+  window.addEventListener('scroll', () => {
+    const current = window.scrollY;
+    if (current > 80) {
+      header?.classList.add('shadow-sm');
+    } else {
+      header?.classList.remove('shadow-sm');
+    }
+    lastScroll = current;
+  }, { passive: true });
+
+  // Mobile menu toggle
+  const toggle = document.getElementById('mobile-menu-toggle');
+  const menu   = document.getElementById('mobile-menu');
+  const panel  = document.getElementById('mobile-panel');
+  const overlay = document.getElementById('mobile-overlay');
+  const iconMenu  = document.getElementById('icon-menu');
+  const iconClose = document.getElementById('icon-close');
+
+  let open = false;
+
+  function setOpen(state: boolean) {
+    open = state;
+    toggle?.setAttribute('aria-expanded', String(state));
+    menu?.setAttribute('aria-hidden', String(!state));
+    menu!.style.pointerEvents = state ? 'auto' : 'none';
+    panel!.style.opacity      = state ? '1'    : '0';
+    panel!.style.transform    = state ? 'translateY(0)' : 'translateY(-8px)';
+    overlay!.style.opacity    = state ? '1'    : '0';
+    iconMenu!.classList.toggle('hidden', state);
+    iconClose!.classList.toggle('hidden', !state);
+    document.body.style.overflow = state ? 'hidden' : '';
+  }
+
+  toggle?.addEventListener('click', () => setOpen(!open));
+  overlay?.addEventListener('click', () => setOpen(false));
+
+  // Fecha ao navegar
+  menu?.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => setOpen(false));
+  });
+
+  // Fecha com Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && open) setOpen(false);
+  });
+
+  // ⌘K search shortcut (placeholder)
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      document.getElementById('search-trigger')?.click();
+    }
+  });
+</script>
